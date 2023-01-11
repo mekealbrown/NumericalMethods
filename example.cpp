@@ -19,7 +19,7 @@ void convergence()
         w = 111 - 1130 / v + 3000 / (v * u);
         u = v;
         v = w;
-        if (v == 100.)
+        if (v == 100)
         {
             std::cout << "convergence bug iteration: " << i;
             break;
@@ -48,16 +48,16 @@ void interest()
 template <typename T>
 void rump()
 {
-    T a = 77617.0;
-    T b = 33096.0;
+    T a = 77617;
+    T b = 33096;
     T b2, b4, b6, b8, a2, firstexpr, f;
     b2 = b * b;
     b4 = b2 * b2;
     b6 = b4 * b2;
     b8 = b4 * b4;
     a2 = a * a;
-    firstexpr = 11 * a2 * b2 - b6 - 121 * b4 - 2;
-    f = 333.75 * b6 + a2 * firstexpr + 5.5 * b8 + (a / (2.0 * b));
+    firstexpr = (11 * a2 * b2) - b6 - (121 * b4) - 2;
+    f = (333.75 * b6) + (a2 * firstexpr) + (5.5 * b8) + (a / (2.0 * b));
     std::cout << "Rump bug solution: " << std::setprecision(20) << f;
 }
 
