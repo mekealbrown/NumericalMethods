@@ -5,7 +5,13 @@
 #include <cfenv>
 #include <string>
 
+/* 
+    -compute differences between different Riemman Sum rules
+    -clean up interactive interface
+*/
+
 typedef double (*functions)(double);
+
 
 void changeRoundMethod(int x, std::string &s)
 {
@@ -88,13 +94,13 @@ int main()
     double lowerBound, upperBound, subInterval;
     char whichFunc, rsVersion;
     int precision;
-    std::cout << "Enter a lower, upper bound, and subinterval: " << std::endl;
-    std::cin >> lowerBound >> upperBound >> subInterval;
-    std::cout << "Enter which equation and Riemann Sum rule to use: " << std::endl; //1-4 corresponds to the 4 equations in the problem respectively
-    std::cin >> whichFunc >> rsVersion;
-    std::cout << "Enter the precision: " << std::endl;   //allow variable rounding precision
+    std::cout << "Equation, lower, and upper bound: ";
+    std::cin >> whichFunc >> lowerBound >> upperBound;
+    std::cout << "Subinterval and Riemann Sum rule: "; //1-4 corresponds to the 4 equations in the problem respectively
+    std::cin >> subInterval >> rsVersion;
+    std::cout << "Precision: ";   //allow variable rounding precision
     std::cin >> precision;
-    std::cout << std::endl << std::fixed;
+    std::cout << "\nSolutions" << std::endl << "-----------------------------------\n" << std::fixed;
 
     std::string currMethod;
     double solution;
@@ -107,6 +113,19 @@ int main()
         std::cout << std::setprecision(precision) << '[' << currMethod << "] : " << solution 
                   << std::setw(20) << std::right << "  absolute error: " << absolute << " relative error: " << relative << "%" << std::endl;
     }
-    std::cout << std::endl;
+   // std::cout << "\nDifferences between summation rules" << std::endl << "-----------------------------------\n";
+   // // differences between sum methods(wish i had more time to clean up this mess. would probably require re-writing it all. shouldn't be summing down here again)
+   // std::cout << "Left - Right: " 
+   // << riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'l', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'r', rsVersion);
+   // std::cout << "\nLeft - Midpoint: " 
+   // << riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'l', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'm', rsVersion);
+   // std::cout << "\nLeft - Trapazoidal: " 
+   // << riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'l', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 't', rsVersion);
+   // std::cout << "\nRight - Midpoint: " 
+   // << riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'r', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'm', rsVersion);
+   // std::cout << "\nRight - Trapazoidal: " << 
+   // riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'r', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 't', rsVersion);
+   // std::cout << "\nMidpoint - Trapazoidal: " 
+   // << riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'm', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 't', rsVersion);
     return 0;
 }
