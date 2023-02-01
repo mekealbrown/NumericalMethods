@@ -58,21 +58,21 @@ void absRelError(double &x, double &y, char prob, double solution)
     }
 }
 
-//bisection root method algorithm as explained in the wiki page dedicated to it
-double bisectionRootMethod(double(*fp)(double func), double lower, double upper, char which, double tol)
+//bisection solution method algorithm as explained in the wiki page dedicated to it
+double bisectionsolutionMethod(double(*fp)(double func), double lower, double upper, char which, double tol)
 { 
-    double root = lower;
+    double solution = lower;
     while ((upper - lower) >= tol)
     {
-        root = (lower + upper) / 2; //middle point
-        if (fp(root) == 0.0)
+        solution = (lower + upper) / 2; //middle point
+        if (fp(solution) == 0.0)
             break;
-        else if (fp(root) * fp(lower) < 0)
-            upper = root;
+        else if (fp(solution) * fp(lower) < 0)
+            upper = solution;
         else 
-            lower = root;
+            lower = solution;
     }
-    return root;
+    return solution;
 }
 int main()
 {
@@ -119,7 +119,7 @@ int main()
         for (int i{0}; i < 4; ++i) //print table showing differences in rounding methods
         {
             changeRoundMethod(i, currMethod);
-            solution = bisectionRootMethod(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, whichFunc, tolerance);
+            solution = bisectionsolutionMethod(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, whichFunc, tolerance);
             absRelError(absolute, relative, whichFunc, solution);
             std::cout << std::setprecision(precision) << '[' << currMethod << "] : " << solution 
                       << std::setw(20) << std::right << "  absolute error: " << absolute << " relative error: " << relative << '%' << std::endl;
@@ -127,7 +127,7 @@ int main()
     }
     else 
     {
-        solution = bisectionRootMethod(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, whichFunc, tolerance);
+        solution = bisectionsolutionMethod(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, whichFunc, tolerance);
         absRelError(absolute, relative, whichFunc, solution);
         std::cout << std::setprecision(precision) << "solution: " << solution << std::setw(20) << std::right << "  absolute error: " << absolute 
                   << " relative error: " << relative << '%' << std::endl;

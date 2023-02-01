@@ -113,19 +113,5 @@ int main()
         std::cout << std::setprecision(precision) << '[' << currMethod << "] : " << solution 
                   << std::setw(20) << std::right << "  absolute error: " << absolute << " relative error: " << relative << "%" << std::endl;
     }
-   // std::cout << "\nDifferences between summation rules" << std::endl << "-----------------------------------\n";
-   // // differences between sum methods(wish i had more time to clean up this mess. would probably require re-writing it all. shouldn't be summing down here again)
-   // std::cout << "Left - Right: " 
-   // << riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'l', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'r', rsVersion);
-   // std::cout << "\nLeft - Midpoint: " 
-   // << riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'l', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'm', rsVersion);
-   // std::cout << "\nLeft - Trapazoidal: " 
-   // << riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'l', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 't', rsVersion);
-   // std::cout << "\nRight - Midpoint: " 
-   // << riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'r', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'm', rsVersion);
-   // std::cout << "\nRight - Trapazoidal: " << 
-   // riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'r', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 't', rsVersion);
-   // std::cout << "\nMidpoint - Trapazoidal: " 
-   // << riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 'm', rsVersion) - riemannSum(functions[(int)whichFunc - '0'], lowerBound, upperBound, subInterval, 't', rsVersion);
     return 0;
 }
