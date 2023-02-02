@@ -5,6 +5,7 @@
 #include <cfenv>
 #include <math.h>
 #include <string>
+#include <vector>
 
 typedef double (*functions)(double);
 
@@ -142,24 +143,36 @@ void regulaFalsi(double(*fp)(double func), double lower, double upper, double to
 //Illinois root finding algorithm 
 void illinois(double(*fp)(double func), double lower, double upper, double tol, int &iterations, double &solution, char which, double &error, double sol) 
 {
-    double f0 = fp(lower);
-    double f1 = fp(upper);
-    solution = lower - ((upper - lower) / (f1 - f0)) * f0;
-    double f2 = fp(solution);
-    iterations = 1;
-    while (fabs(f2) > tol) {
-        lower = upper;
-        f0 = f1;
-        upper = solution;
-        f1 = f2;
-        solution = lower - ((upper - lower) / (f1 - f0)) * f0;
-        f2 = fp(solution);
+    iterations = 0;
+    double a{1}, fa = fp(a);
+    double  b{2}, fb = fp(b);
+
+    do
+    {
+        solution = (a * fb - b * fa) / (fb - fa);
+        double fc = fp(solution);
+        
+        if(signbit(fc) != signbit(fa))
+        {
+            b = a; 
+            fb = fa;
+        }
+        else
+            fb *= 0.5;
+
+        a = solution; fa = fc;
+        
+        if(fabs(fc) < tol) 
+            break;
+
         ++iterations;
         absError(error, which, solution);
         print(iterations, sol, solution, error);
         std::cout << std::endl;
     }
+    while(fabs(b - a) > tol);   
 }
+
 
 int main()
 {
