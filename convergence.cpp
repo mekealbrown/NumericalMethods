@@ -161,16 +161,13 @@ void illinois(double(*fp)(double func), double lower, double upper, double tol, 
             fb *= 0.5;
 
         a = solution; fa = fc;
-        
-        if(fabs(fc) < tol) 
-            break;
 
         ++iterations;
         absError(error, which, solution);
         print(iterations, sol, solution, error);
         std::cout << std::endl;
     }
-    while(fabs(b - a) > tol);   
+    while(fabs(fp(solution)) > tol);   
 }
 
 
