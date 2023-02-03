@@ -7,6 +7,17 @@
 #include <string>
 #include <vector>
 
+/*
+    In each root finding function, at the bottom of the main loop is a 
+    section that contains a call to 'print' and then a standard out for endl.
+    After the loop is a section of the exact same code except for the last
+    parameter in 'print' being different. The current setup calculated the average
+    absolute error and passes that to print. To print tabular results for each iteration,
+    comment out the printing after the loop and uncomment the printing in the loop.
+*/
+
+
+
 typedef double (*functions)(double);
 
 //test functions
@@ -16,12 +27,14 @@ double thirdEq(double x) {return (std::sqrt(4 - (x * x))) - 1;}
 double fourthEq(double x) {return std::sin(x);}
 double fifthEq(double x) {return 2 * (x * x * x) - 4 * (x * x) + 3 * x;}
 
-//tabular printing for ease of data visualization
+/*  tabular printing for ease of data visualization
+    may take an average for 'error' to print mean of error once
+*/
 void print(int iter, double trueSol, double sol, double error) 
 {
     std::cout << std::fixed << std::setprecision(15);
-    std::cout << iter << " |" << trueSol << " |" <<std::setfill(' ') << std::setw(15) << sol << "    |" << std::setfill(' ') << std::setw(15)
-                  << error << std::endl;
+    std::cout << iter << "|" << trueSol << " |" <<std::setfill(' ') << std::setw(15) << sol << "    |" << std::setfill(' ') << std::setw(15)
+                  << std::abs(error) << std::endl;
     std::cout << std::setfill('-') << std::setw(68) << "\n";
 }
 
@@ -96,8 +109,12 @@ void absError(double &x, char prob, double solution)
 //bisection root finding method algorithm as explained in the wiki page dedicated to it
 void bisectionsolutionMethod(double(*fp)(double func), double lower, double upper, double tol, int &iterations, double &solution, double &error, char which, double sol)
 { 
+    std::cout << "Bisection" << std::endl;
+    std::cout << "i |" << "x |               |" << "f(x) |               |" << "error" << std::endl;
+    std::cout << std::setfill('-') << std::setw(68) << "\n";
     solution = lower;
     iterations = 0;
+    double avg{0};
     while ((upper - lower) >= tol)
     {
         solution = (lower + upper) / 2; //middle point
@@ -115,16 +132,23 @@ void bisectionsolutionMethod(double(*fp)(double func), double lower, double uppe
             upper = solution;
         ++iterations;
         absError(error, which, solution);
-        print(iterations, sol, solution, error);
-        std::cout << std::endl;
+        avg += error;
+        //print(iterations, sol, solution, error);
+        //std::cout << std::endl;
     }
+    print(iterations, sol, solution, avg / iterations);
+    std::cout << std::endl;
 }
 
 //false position root finding method
 void regulaFalsi(double(*fp)(double func), double lower, double upper, double tol, int &iterations, double &solution, char which, double &error, double sol)
 {
+    std::cout << "False Position" << std::endl;
+    std::cout << "i |" << "x |               |" << "f(x) |               |" << "error" << std::endl;
+    std::cout << std::setfill('-') << std::setw(68) << "\n";
     double hold, f0{fp(lower)}, f1{fp(upper)}; 
     iterations = 0;
+    double avg{0};
     do  
     {
         solution = lower - (lower - upper) * f0 / (f0 - f1);
@@ -140,51 +164,61 @@ void regulaFalsi(double(*fp)(double func), double lower, double upper, double to
         }
         ++iterations;
         absError(error, which, solution);
-        print(iterations, sol, solution, error);
-        std::cout << std::endl;
+        avg += error;
+        //print(iterations, sol, solution, error);
+        //std::cout << std::endl;
     }
     while(fabs(hold) > tol);
+    print(iterations, sol, solution, avg / iterations);
+    std::cout << std::endl;
 }
 
 //Illinois root finding algorithm 
 void illinois(double(*fp)(double func), double lower, double upper, double tol, int &iterations, double &solution, char which, double &error, double sol) 
 {
+    std::cout << "Illinois" << std::endl;
+    std::cout << "i |" << "x |               |" << "f(x) |               |" << "error\n";
+    std::cout << std::setfill('-') << std::setw(68) << "\n";
     double c, fc;
-   int n, side = 0;
-   int max_inter{15};
-   iterations = 0;
-   /* starting values at endpoints of interval */
-   double fa = fp(lower);
-   double fb = fp(upper);
+    int n, side = 0;
+    int max_inter{15};
+    iterations = 0;
+    double avg{0};
+    /* starting values at endpoints of interval */
+    double fa = fp(lower);
+    double fb = fp(upper);
 
-   for (n = 0; n < max_inter; n++) 
-   {
-        solution = (fa * upper - fb * lower) / (fa - fb);
-        if (fabs(upper - lower) < tol * fabs(upper + lower))
-           break;
-        fc = fp(solution);
+    for (n = 0; n < max_inter; n++) 
+    {
+         solution = (fa * upper - fb * lower) / (fa - fb);
+         if (fabs(upper - lower) < tol * fabs(upper + lower))
+            break;
+         fc = fp(solution);
 
-        if (fc * fb > 0) 
-        {
-            upper = solution; fb = fc;
-            if (side == -1)
-               fa /= 2;
-            side = -1;
-        } else if (fa * fc > 0) {
-           /* fc and fa have same sign, copy c to a */
-           lower = solution; fa = fc;
-           if (side == +1)
-              fb /= 2;
-           side = +1;
-        } else {
-           /* fc * f_ very small (looks like zero) */
-           break;
-        }
-        ++iterations;
-        absError(error, which, solution);
-        print(iterations, sol, solution, error);
-        std::cout << std::endl;
-    } 
+         if (fc * fb > 0) 
+         {
+             upper = solution; fb = fc;
+             if (side == -1)
+                fa /= 2;
+             side = -1;
+         } else if (fa * fc > 0) {
+            /* fc and fa have same sign, copy c to a */
+            lower = solution; fa = fc;
+            if (side == +1)
+               fb /= 2;
+            side = +1;
+         } else {
+            /* fc * f_ very small (looks like zero) */
+            break;
+         }
+         ++iterations;
+         absError(error, which, solution);
+         avg += error;
+         //print(iterations, sol, solution, error);
+         //std::cout << std::endl;
+     } 
+     print(iterations, sol, solution, avg / iterations);
+     std::cout << std::endl;
 }  
 
 
@@ -192,7 +226,7 @@ void illinois(double(*fp)(double func), double lower, double upper, double tol, 
 int main()
 {
     double (*functions[5])(double){firstEq, secondEq, thirdEq, fourthEq, fifthEq}; //store each function 
-    double lowerBound, upperBound, tolerance, absolute, solution, trueSol;
+    double lowerBound, upperBound, tolerance, absolute, solution, trueSol; //trueSol is actual value of root 
     char whichFunc;
     int precision, iterations;
     std::cout << "Enter which equation to test: "; //1-5 corresponds to the 5 equations in the problem respectively
@@ -201,18 +235,9 @@ int main()
     std::cin >> tolerance;
     assignBounds(whichFunc, lowerBound, upperBound); 
     solutions(whichFunc, trueSol); //get trueSol to equal solution for equation we're testing
-
-    std::cout << "Bisection\n";
-    std::cout << "i |" << "x |               |" << "f(x) |               |" << "error\n"; // << std::endl;
-    std::cout << std::setfill('-') << std::setw(68) << "\n";
     bisectionsolutionMethod(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, tolerance, iterations, solution, absolute, whichFunc, trueSol);
-    std::cout << "False Position\n";
-    std::cout << "i |" << "x |               |" << "f(x) |               |" << "error\n"; // << std::endl;
-    std::cout << std::setfill('-') << std::setw(68) << "\n";
     regulaFalsi(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound,tolerance, iterations, solution, whichFunc, absolute, trueSol);
-    std::cout << "Illinois\n";
-    std::cout << "i |" << "x |               |" << "f(x) |               |" << "error\n"; // << std::endl;
-    std::cout << std::setfill('-') << std::setw(68) << "\n";
     illinois(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, tolerance, iterations, solution, whichFunc, absolute, trueSol);
+    
     return 0;
 }
