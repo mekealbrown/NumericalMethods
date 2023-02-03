@@ -102,11 +102,17 @@ void bisectionsolutionMethod(double(*fp)(double func), double lower, double uppe
     {
         solution = (lower + upper) / 2; //middle point
         if (fp(solution) == 0.0)
+        {
+            ++iterations;
+            absError(error, which, solution);
+            print(iterations, sol, solution, error);
+            std::cout << std::endl;
             break;
-        else if (fp(solution) * fp(lower) < 0)
-            upper = solution;
-        else 
+        }
+        else if (signbit(fp(solution)) == signbit(fp(lower)))
             lower = solution;
+        else 
+            upper = solution;
         ++iterations;
         absError(error, which, solution);
         print(iterations, sol, solution, error);
@@ -143,32 +149,44 @@ void regulaFalsi(double(*fp)(double func), double lower, double upper, double to
 //Illinois root finding algorithm 
 void illinois(double(*fp)(double func), double lower, double upper, double tol, int &iterations, double &solution, char which, double &error, double sol) 
 {
-    iterations = 0;
-    double a{1}, fa = fp(a);
-    double  b{2}, fb = fp(b);
+    double c, fc;
+   int n, side = 0;
+   int max_inter{15};
+   iterations = 0;
+   /* starting values at endpoints of interval */
+   double fa = fp(lower);
+   double fb = fp(upper);
 
-    do
-    {
-        solution = (a * fb - b * fa) / (fb - fa);
-        double fc = fp(solution);
-        
-        if(signbit(fc) != signbit(fa))
+   for (n = 0; n < max_inter; n++) 
+   {
+        solution = (fa * upper - fb * lower) / (fa - fb);
+        if (fabs(upper - lower) < tol * fabs(upper + lower))
+           break;
+        fc = fp(solution);
+
+        if (fc * fb > 0) 
         {
-            b = a; 
-            fb = fa;
+            upper = solution; fb = fc;
+            if (side == -1)
+               fa /= 2;
+            side = -1;
+        } else if (fa * fc > 0) {
+           /* fc and fa have same sign, copy c to a */
+           lower = solution; fa = fc;
+           if (side == +1)
+              fb /= 2;
+           side = +1;
+        } else {
+           /* fc * f_ very small (looks like zero) */
+           break;
         }
-        else
-            fb *= 0.5;
-
-        a = solution; fa = fc;
-
         ++iterations;
         absError(error, which, solution);
         print(iterations, sol, solution, error);
         std::cout << std::endl;
-    }
-    while(fabs(fp(solution)) > tol);   
-}
+    } 
+}  
+
 
 
 int main()
