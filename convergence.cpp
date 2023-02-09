@@ -6,6 +6,7 @@
 #include <math.h>
 #include <string>
 #include <vector>
+#include <limits>
 
 /*
     In each root finding function, at the bottom of the main loop is a 
@@ -16,16 +17,25 @@
     comment out the printing after the loop and uncomment the printing in the loop.
 */
 
-
+#define TOL 0.00000000000001
+#define EPSILON 1e-50
 
 typedef double (*functions)(double);
+typedef double (*derivative)(double);
 
 //test functions
-double firstEq(double x) {return 7 - (x * x);}
-double secondEq(double x) {return 3 + (2 * x) - (x * x);}
-double thirdEq(double x) {return (std::sqrt(4 - (x * x))) - 1;}
+double firstEq(double x) {return 7 - std::pow(x,2);}
+double secondEq(double x) {return 3 + (2 * x) - std::pow(x,2);}
+double thirdEq(double x) {return (std::sqrt(4 - std::pow(x,2))) - 1;}
 double fourthEq(double x) {return std::sin(x);}
-double fifthEq(double x) {return 2 * (x * x * x) - 4 * (x * x) + 3 * x;}
+double fifthEq(double x) {return 2 * std::pow(x,3) - 4 * std::pow(x,2) + 3 * x;}
+
+//derivatives for test functions for use in Newtons Method
+double firstPrime(double x) {return -2 * x;}
+double secondPrime(double x) {return 2 - (2 * x);}
+double thirdPrime(double x) {return (x / (std::sqrt(4 - std::pow(x,2)))) * -1;}
+double fourthPrime(double x) {return std::cos(x);}
+double fifthPrime(double x) {return 6 * std::pow(x,2) - 8 * x + 3;}
 
 /*  tabular printing for ease of data visualization
     may take an average for 'error' to print mean of error once
@@ -38,7 +48,7 @@ void print(int iter, double trueSol, double sol, double error)
     std::cout << std::setfill('-') << std::setw(68) << "\n";
 }
 
-//set bounds for each equation
+//solution for original equation && its derivative
 void solutions(char c, double &val) 
 {
     switch (c) {  
@@ -107,7 +117,7 @@ void absError(double &x, char prob, double solution)
 }
 
 //bisection root finding method algorithm as explained in the wiki page dedicated to it
-void bisectionsolutionMethod(double(*fp)(double func), double lower, double upper, double tol, int &iterations, double &solution, double &error, char which, double sol)
+void bisectionsolutionMethod(double(*fp)(double func), double lower, double upper, int &iterations, double &solution, double &error, char which, double sol)
 { 
     std::cout << "Bisection" << std::endl;
     std::cout << "i |" << "x |               |" << "f(x) |               |" << "error" << std::endl;
@@ -115,7 +125,7 @@ void bisectionsolutionMethod(double(*fp)(double func), double lower, double uppe
     solution = lower;
     iterations = 0;
     double avg{0};
-    while ((upper - lower) >= tol)
+    while ((upper - lower) >= TOL)
     {
         solution = (lower + upper) / 2; //middle point
         if (fp(solution) == 0.0)
@@ -141,7 +151,7 @@ void bisectionsolutionMethod(double(*fp)(double func), double lower, double uppe
 }
 
 //false position root finding method
-void regulaFalsi(double(*fp)(double func), double lower, double upper, double tol, int &iterations, double &solution, char which, double &error, double sol)
+void regulaFalsi(double(*fp)(double func), double lower, double upper, int &iterations, double &solution, char which, double &error, double sol)
 {
     std::cout << "False Position" << std::endl;
     std::cout << "i |" << "x |               |" << "f(x) |               |" << "error" << std::endl;
@@ -168,13 +178,13 @@ void regulaFalsi(double(*fp)(double func), double lower, double upper, double to
         //print(iterations, sol, solution, error);
         //std::cout << std::endl;
     }
-    while(fabs(hold) > tol);
+    while(fabs(hold) > TOL);
     print(iterations, sol, solution, avg / iterations);
     std::cout << std::endl;
 }
 
 //Illinois root finding algorithm 
-void illinois(double(*fp)(double func), double lower, double upper, double tol, int &iterations, double &solution, char which, double &error, double sol) 
+void illinois(double(*fp)(double func), double lower, double upper, int &iterations, double &solution, char which, double &error, double sol) 
 {
     std::cout << "Illinois" << std::endl;
     std::cout << "i |" << "x |               |" << "f(x) |               |" << "error\n";
@@ -184,60 +194,110 @@ void illinois(double(*fp)(double func), double lower, double upper, double tol, 
     int max_inter{15};
     iterations = 0;
     double avg{0};
-    /* starting values at endpoints of interval */
     double fa = fp(lower);
     double fb = fp(upper);
 
     for (n = 0; n < max_inter; n++) 
     {
-         solution = (fa * upper - fb * lower) / (fa - fb);
-         if (fabs(upper - lower) < tol * fabs(upper + lower))
+        solution = (fa * upper - fb * lower) / (fa - fb);
+        if (fabs(upper - lower) < TOL * fabs(upper + lower))
+           break;
+        fc = fp(solution);
+        if (fc * fb > 0) 
+        {
+            upper = solution; fb = fc;
+            if (side == -1)
+               fa /= 2;
+            side = -1;
+        } 
+        else if (fa * fc > 0) 
+        {
+           lower = solution; fa = fc;
+           if (side == +1)
+              fb /= 2;
+           side = +1;
+        } 
+        else 
             break;
-         fc = fp(solution);
-
-         if (fc * fb > 0) 
-         {
-             upper = solution; fb = fc;
-             if (side == -1)
-                fa /= 2;
-             side = -1;
-         } else if (fa * fc > 0) {
-            /* fc and fa have same sign, copy c to a */
-            lower = solution; fa = fc;
-            if (side == +1)
-               fb /= 2;
-            side = +1;
-         } else {
-            /* fc * f_ very small (looks like zero) */
-            break;
-         }
-         ++iterations;
-         absError(error, which, solution);
-         avg += error;
-         //print(iterations, sol, solution, error);
-         //std::cout << std::endl;
-     } 
-     print(iterations, sol, solution, avg / iterations);
-     std::cout << std::endl;
+        
+        ++iterations;
+        absError(error, which, solution);
+        avg += error;
+        //print(iterations, sol, solution, error);
+        //std::cout << std::endl;
+    } 
+    print(iterations, sol, solution, avg / iterations);
+    std::cout << std::endl;
 }  
 
+//Newton's Method
+void newtons_method(double(*fp)(double func), double(*fp1)(double func), double guess, int &iterations, double &solution, char which, double &error, double sol)
+{
+    std::cout << "Newton's Method" << std::endl;
+    std::cout << "i |" << "x |               |" << "f(x) |               |" << "error\n";
+    std::cout << std::setfill('-') << std::setw(68) << "\n";
+    double avg{0}, y, yprime;
+    iterations = 1;
+    for (int i{0}; i < 50; ++i)
+    {
+        y = fp(guess);
+        yprime = fp1(guess);
+        if (std::abs(yprime) < EPSILON)
+            break;
+
+        solution = guess - y / yprime;
+        if (std::abs(solution - guess) <= TOL)
+            break;
+
+        guess = solution;
+        ++iterations;
+        absError(error, which, solution);
+        avg += error;
+    }
+    print(iterations, sol, solution, avg / iterations);
+    std::cout << std::endl;     
+} 
+
+//secant method
+void secant(double(*fp)(double func), double lower, double upper, int &iterations, double &solution, char which, double &error, double sol)
+{
+    std::cout << "Secant Method" << std::endl;
+    std::cout << "i |" << "x |               |" << "f(x) |               |" << "error\n";
+    std::cout << std::setfill('-') << std::setw(68) << "\n";
+    iterations = 0;
+    double avg{0};
+    for (int i{0}; i < 50; ++i) //max 50 iterations;
+    {
+        solution = upper - fp(upper) * (upper - lower) / (fp(upper) - fp(lower));
+        lower = upper;
+        upper = solution;
+        ++iterations;
+        if (std::abs(lower - upper) < TOL)
+            break;
+        absError(error, which, solution);
+        avg += error;
+    }
+    print(iterations, sol, solution, avg / iterations);
+    std::cout << std::endl; 
+}
 
 
 int main()
 {
     double (*functions[5])(double){firstEq, secondEq, thirdEq, fourthEq, fifthEq}; //store each function 
-    double lowerBound, upperBound, tolerance, absolute, solution, trueSol; //trueSol is actual value of root 
+    double (*derivative[5])(double){firstPrime, secondPrime, thirdPrime, fourthPrime, fifthPrime};
+    double lowerBound, upperBound, absolute, solution, trueSol; //trueSol is actual value of root
     char whichFunc;
     int precision, iterations;
     std::cout << "Enter which equation to test: "; //1-5 corresponds to the 5 equations in the problem respectively
     std::cin >> whichFunc;
-    std::cout << "Tolerance: "; //tolerance refers to how close to zero we get before saying we're close enough
-    std::cin >> tolerance;
     assignBounds(whichFunc, lowerBound, upperBound); 
     solutions(whichFunc, trueSol); //get trueSol to equal solution for equation we're testing
-    bisectionsolutionMethod(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, tolerance, iterations, solution, absolute, whichFunc, trueSol);
-    regulaFalsi(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound,tolerance, iterations, solution, whichFunc, absolute, trueSol);
-    illinois(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, tolerance, iterations, solution, whichFunc, absolute, trueSol);
-    
+    bisectionsolutionMethod(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, iterations, solution, absolute, whichFunc, trueSol);
+    regulaFalsi(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, iterations, solution, whichFunc, absolute, trueSol);
+    illinois(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, iterations, solution, whichFunc, absolute, trueSol);
+    newtons_method(functions[((int)whichFunc - '0') - 1], derivative[((int)whichFunc - '0') - 1], upperBound, iterations, solution, whichFunc, absolute, trueSol);
+    secant(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, iterations, solution, whichFunc, absolute, trueSol);
+
     return 0;
 }
