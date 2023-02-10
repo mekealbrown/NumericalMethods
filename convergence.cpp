@@ -17,8 +17,6 @@
     comment out the printing after the loop and uncomment the printing in the loop.
 */
 
-#define TOL 0.00000000000001
-#define EPSILON 1e-50
 
 typedef double (*functions)(double);
 typedef double (*derivative)(double);
@@ -48,7 +46,7 @@ void print(int iter, double trueSol, double sol, double error)
     std::cout << std::setfill('-') << std::setw(68) << "\n";
 }
 
-//solution for original equation && its derivative
+//solution for original equation
 void solutions(char c, double &val) 
 {
     switch (c) {  
@@ -95,24 +93,30 @@ void assignBounds(char c, double &lower, double &upper)
     }
 }
 
-//absolute and relative error of each solution
+//need to find the bits of precision here
 void absError(double &x, char prob, double solution) 
 {
+    double error;
     switch (prob) {
         case '1':
-            x = std::abs(std::sqrt(7) - solution);
+            error = std::abs(std::sqrt(7) - solution);
+            x = -std::ilogb(error) - 1;
             break;
         case '2':
-            x = std::abs(3 - solution);
+            error = std::abs(3 - solution);
+            x = -std::ilogb(error) - 1;
             break;
         case '3':
-            x = std::abs(std::sqrt(3) * -1 - solution);
+            error = std::abs(std::sqrt(3) * -1 - solution);
+            x = -std::ilogb(error) - 1;
             break;
         case '4':
-            x = std::abs(2 * M_PI - solution); 
+            error = std::abs(2 * M_PI - solution); 
+            x = -std::ilogb(error) - 1;
             break;
         case '5':
-            x = 0 - solution;
+            error = 0 - solution;
+            x = -std::ilogb(error) - 1;
     }
 }
 
@@ -125,7 +129,7 @@ void bisectionsolutionMethod(double(*fp)(double func), double lower, double uppe
     solution = lower;
     iterations = 0;
     double avg{0};
-    while ((upper - lower) >= TOL)
+    while (upper != lower && iterations < 100)
     {
         solution = (lower + upper) / 2; //middle point
         if (fp(solution) == 0.0)
@@ -142,12 +146,16 @@ void bisectionsolutionMethod(double(*fp)(double func), double lower, double uppe
             upper = solution;
         ++iterations;
         absError(error, which, solution);
-        avg += error;
-        //print(iterations, sol, solution, error);
-        //std::cout << std::endl;
+        if (error == 2147483647)
+        {
+            std::cerr << "Out of bounds...\n\n";
+            break;
+        }
+        print(iterations, sol, solution, error);
+        std::cout << std::endl;
     }
-    print(iterations, sol, solution, avg / iterations);
-    std::cout << std::endl;
+    //print(iterations, sol, solution, avg / iterations);
+    //std::cout << std::endl;
 }
 
 //false position root finding method
@@ -174,13 +182,18 @@ void regulaFalsi(double(*fp)(double func), double lower, double upper, int &iter
         }
         ++iterations;
         absError(error, which, solution);
+        if (error == 2147483647)
+        {
+            std::cerr << "Out of bounds...\n\n";
+            break;
+        }
         avg += error;
-        //print(iterations, sol, solution, error);
-        //std::cout << std::endl;
+        print(iterations, sol, solution, error);
+        std::cout << std::endl;
     }
-    while(fabs(hold) > TOL);
-    print(iterations, sol, solution, avg / iterations);
-    std::cout << std::endl;
+    while(upper != lower && iterations < 100);
+    //print(iterations, sol, solution, avg / iterations);
+ //   std::cout << std::endl;
 }
 
 //Illinois root finding algorithm 
@@ -197,11 +210,9 @@ void illinois(double(*fp)(double func), double lower, double upper, int &iterati
     double fa = fp(lower);
     double fb = fp(upper);
 
-    for (n = 0; n < max_inter; n++) 
+    while (upper != lower && iterations < 100)
     {
         solution = (fa * upper - fb * lower) / (fa - fb);
-        if (fabs(upper - lower) < TOL * fabs(upper + lower))
-           break;
         fc = fp(solution);
         if (fc * fb > 0) 
         {
@@ -217,17 +228,20 @@ void illinois(double(*fp)(double func), double lower, double upper, int &iterati
               fb /= 2;
            side = +1;
         } 
-        else 
-            break;
         
         ++iterations;
         absError(error, which, solution);
+        if (error == 2147483647)
+        {
+            std::cerr << "Out of bounds...\n\n";
+            break;
+        }
         avg += error;
-        //print(iterations, sol, solution, error);
-        //std::cout << std::endl;
+        print(iterations, sol, solution, error);
+        std::cout << std::endl;
     } 
-    print(iterations, sol, solution, avg / iterations);
-    std::cout << std::endl;
+    //print(iterations, sol, solution, avg / iterations);
+    //std::cout << std::endl;
 }  
 
 //Newton's Method
@@ -236,26 +250,30 @@ void newtons_method(double(*fp)(double func), double(*fp1)(double func), double 
     std::cout << "Newton's Method" << std::endl;
     std::cout << "i |" << "x |               |" << "f(x) |               |" << "error\n";
     std::cout << std::setfill('-') << std::setw(68) << "\n";
-    double avg{0}, y, yprime;
+    double avg{0}, f0, prime;
     iterations = 1;
-    for (int i{0}; i < 50; ++i)
-    {
-        y = fp(guess);
-        yprime = fp1(guess);
-        if (std::abs(yprime) < EPSILON)
-            break;
 
-        solution = guess - y / yprime;
-        if (std::abs(solution - guess) <= TOL)
-            break;
-
-        guess = solution;
-        ++iterations;
+    do
+	{
+		prime = fp1(guess);
+		f0 = fp(guess);
+		solution = guess - f0/prime;
+		guess = solution;
+		
+		++iterations;
         absError(error, which, solution);
-        avg += error;
-    }
-    print(iterations, sol, solution, avg / iterations);
-    std::cout << std::endl;     
+        if (error == 2147483647)
+        {
+            std::cerr << "Out of bounds...\n\n";
+            break;
+        }
+        print(iterations, sol, solution, error);
+        std::cout << std::endl;
+
+	} while(iterations < 50); //need to find a better terminating condition than this smh
+
+    //print(iterations, sol, solution, avg / iterations);
+    //std::cout << std::endl;     
 } 
 
 //secant method
@@ -266,19 +284,24 @@ void secant(double(*fp)(double func), double lower, double upper, int &iteration
     std::cout << std::setfill('-') << std::setw(68) << "\n";
     iterations = 0;
     double avg{0};
-    for (int i{0}; i < 50; ++i) //max 50 iterations;
+    while (upper != lower && iterations < 100)
     {
         solution = upper - fp(upper) * (upper - lower) / (fp(upper) - fp(lower));
         lower = upper;
         upper = solution;
         ++iterations;
-        if (std::abs(lower - upper) < TOL)
-            break;
+
         absError(error, which, solution);
-        avg += error;
+        if (error == 2147483647)
+        {
+            std::cerr << "Out of bounds...\n\n";
+            break;
+        }
+        print(iterations, sol, solution, error);
+        std::cout << std::endl;
     }
-    print(iterations, sol, solution, avg / iterations);
-    std::cout << std::endl; 
+    //print(iterations, sol, solution, avg / iterations);
+    //std::cout << std::endl; 
 }
 
 
