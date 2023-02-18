@@ -134,9 +134,9 @@ void bisectionsolutionMethod(double(*fp)(double func), double lower, double uppe
         bitsPrecision(bits, which, solution);
         if (bits == 2147483647)
         {
-            std::cerr << "Out of bounds...\n\n";
             print(iterations, sol, solution, bits);
             std::cout << std::endl;
+            std::cerr << "Out of bounds...\n\n";
             break;
         }
         print(iterations, sol, solution, bits);
@@ -172,9 +172,9 @@ void regulaFalsi(double(*fp)(double func), double lower, double upper, int &iter
         bitsPrecision(bits, which, solution);
         if (bits == 2147483647)
         {
-            std::cerr << "Out of bounds...\n\n";
             print(iterations, sol, solution, bits);
             std::cout << std::endl;
+            std::cerr << "Out of bounds...\n\n";
             break;
         }
         print(iterations, sol, solution, bits);
@@ -222,9 +222,9 @@ void illinois(double(*fp)(double func), double lower, double upper, int &iterati
         bitsPrecision(bits, which, solution);
         if (bits == 2147483647)
         {
-            std::cerr << "Out of bounds...\n\n";
             print(iterations, sol, solution, bits);
             std::cout << std::endl;
+            std::cerr << "Out of bounds...\n\n";
             break;
         }
         print(iterations, sol, solution, bits);
@@ -235,64 +235,68 @@ void illinois(double(*fp)(double func), double lower, double upper, int &iterati
 }  
 
 //Newton's Method
-//void newtons_method(double(*fp)(double func), double(*fp1)(double func), double guess, int &iterations, double &solution, char which, int &bits, double sol)
-//{
-//    std::cout << "Newton's Method" << std::endl;
-//    std::cout << "i |" << "x |               |" << "f(x) |               |" << "precision\n";
-//    std::cout << std::setfill('-') << std::setw(68) << "\n";
-//    double avg{0}, f0, prime;
-//    iterations = 1;
-//
-//    do
-//	{
-//		prime = fp1(guess);
-//		f0 = fp(guess);
-//		solution = guess - f0/prime;
-//		guess = solution;
-//		
-//		++iterations;
-//        bitsPrecision(bits, which, solution);
-//        if (bits == 2147483647)
-//        {
-//            std::cerr << "Out of bounds...\n\n";
-//            break;
-//        }
-//        print(iterations, sol, solution, bits);
-//        std::cout << std::endl;
-//
-//	} while(iterations < 100); //need to find a better terminating condition than this smh
-//
-//    //print(iterations, sol, solution, avg / iterations);
-//    //std::cout << std::endl;     
-//} 
-//
-////secant method
-//void secant(double(*fp)(double func), double lower, double upper, int &iterations, double &solution, char which, int &bits, double sol)
-//{
-//    std::cout << "Secant Method" << std::endl;
-//    std::cout << "i |" << "x |               |" << "f(x) |               |" << "precision\n";
-//    std::cout << std::setfill('-') << std::setw(68) << "\n";
-//    iterations = 0;
-//    double avg{0};
-//    while (upper != lower && iterations < 100)
-//    {
-//        solution = upper - fp(upper) * (upper - lower) / (fp(upper) - fp(lower));
-//        lower = upper;
-//        upper = solution;
-//        ++iterations;
-//
-//        bitsPrecision(bits, which, solution);
-//        if (bits == 2147483647)  
-//        {
-//            std::cerr << "Out of bounds...\n\n";
-//            break;
-//        }
-//        print(iterations, sol, solution, bits);
-//        std::cout << std::endl;
-//    }
-//    //print(iterations, sol, solution, avg / iterations);
-//    //std::cout << std::endl; 
-//}
+void newtons_method(double(*fp)(double func), double(*fp1)(double func), double guess, int &iterations, double &solution, char which, int &bits, double sol)
+{
+    std::cout << "Newton's Method" << std::endl;
+    std::cout << "i |" << "x |               |" << "f(x) |               |" << "precision\n";
+    std::cout << std::setfill('-') << std::setw(68) << "\n";
+    double avg{0}, f0, prime;
+    iterations = 0;
+
+    do
+	{
+		prime = fp1(guess);
+		f0 = fp(guess);
+		solution = guess - f0/prime;
+		guess = solution;
+		
+		++iterations;
+        bitsPrecision(bits, which, solution);
+        if (bits == 2147483647)
+        {
+            print(iterations, sol, solution, bits);
+            std::cout << std::endl;
+            std::cerr << "Out of bounds...\n\n";
+            break;
+        }
+        print(iterations, sol, solution, bits);
+        std::cout << std::endl;
+
+	} while(iterations < 100); //need to find a better terminating condition than this smh
+
+    //print(iterations, sol, solution, avg / iterations);
+    //std::cout << std::endl;     
+} 
+
+//secant method
+void secant(double(*fp)(double func), double lower, double upper, int &iterations, double &solution, char which, int &bits, double sol)
+{
+    std::cout << "Secant Method" << std::endl;
+    std::cout << "i |" << "x |               |" << "f(x) |               |" << "precision\n";
+    std::cout << std::setfill('-') << std::setw(68) << "\n";
+    iterations = 0;
+    double avg{0};
+    while (iterations < 100)
+    {
+        solution = upper - fp(upper) * (upper - lower) / (fp(upper) - fp(lower));
+        lower = upper;
+        upper = solution;
+        ++iterations;
+
+        bitsPrecision(bits, which, solution);
+        if (bits == 2147483647)  
+        {
+            print(iterations, sol, solution, bits);
+            std::cout << std::endl;
+            std::cerr << "Out of bounds...\n\n";
+            break;
+        }
+        print(iterations, sol, solution, bits);
+        std::cout << std::endl;
+    }
+    //print(iterations, sol, solution, avg / iterations);
+    //std::cout << std::endl; 
+}
 
 
 int main()
@@ -309,8 +313,8 @@ int main()
     bisectionsolutionMethod(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, iterations, solution, bPrec, whichFunc, trueSol);
     regulaFalsi(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, iterations, solution, whichFunc, bPrec, trueSol);
     illinois(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, iterations, solution, whichFunc, bPrec, trueSol);
-    //newtons_method(functions[((int)whichFunc - '0') - 1], derivative[((int)whichFunc - '0') - 1], upperBound, iterations, solution, whichFunc, bPrec, trueSol);
-    //secant(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, iterations, solution, whichFunc, bPrec, trueSol);
+    newtons_method(functions[((int)whichFunc - '0') - 1], derivative[((int)whichFunc - '0') - 1], upperBound, iterations, solution, whichFunc, bPrec, trueSol);
+    secant(functions[((int)whichFunc - '0') - 1], lowerBound, upperBound, iterations, solution, whichFunc, bPrec, trueSol);
 
     return 0;
 }
