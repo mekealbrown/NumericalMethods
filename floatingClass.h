@@ -53,11 +53,11 @@ public:
     };
     FP(int s,int e,std::string x);
 
-    bool isNaN() {return exponent >= (exponent | exponent_size + 1UL) - 1UL && significand != 0;}
-    bool isZero() {return exponent == 0 && significand == 0;}
-    bool isInfinity() {return exponent >= (exponent << exponent_size + 1) - 1UL && significand == 0;}
-    bool isPositive() {return !sign;}
-    bool isNormal() {return exponent != 0 && exponent != (exponent | exponent_size + 1UL) - 1UL && isNaN() != true;} //gotta add other conditions to this and isSubnormal
+    bool isNaN()       {return exponent >= (exponent | exponent_size + 1UL) - 1UL && significand != 0;}
+    bool isZero()      {return exponent == 0 && significand == 0;}
+    bool isInfinity()  {return exponent >= (exponent << exponent_size + 1) - 1UL && significand == 0;}
+    bool isPositive()  {return !sign;}
+    bool isNormal()    {return exponent != 0 && exponent != (exponent | exponent_size + 1UL) - 1UL && isNaN() != true;} 
     bool isSubnormal() {return exponent == 0 && significand > 0 && !isNaN();}
 
     std::string to_string()
