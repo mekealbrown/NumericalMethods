@@ -74,47 +74,49 @@ public:
     std::string to_string()
     {
         std::string result{};
-        if (isNaN())
-        {
-            sign ? result += "-" : result += "+";
-            return result += "NAN";
-        }
-        else if (isInfinity())
-        {
-            sign ? result += "-" : result += "+";
-            return result += "INF";
-        }
-        else if (isZero())
-        {
-            sign ? result += "-" : result += "+";
-            return result += "0";
-        }
+        if (isNaN())  return sign ? "-" : "+" + std::string("NAN");
+        else if (isInfinity()) return sign ? "-" : "+" + std::string("INF");
+        else if (isZero()) return sign ? "-" : "+" + std::string("0");
         isPositive() ? result += "+" : result += "-";
         isNormal() ? result += "1." : result += "0.";
         
         uint64_t sig_mask{1UL << (significand_size - 1UL)};
-        while (sig_mask != 1)
+        while (sig_mask)
         {
             (significand & sig_mask) == 0 ? result += "0" : result += "1";
             sig_mask >>= 1UL;
         }
-        
-
         while (true)
         {
             if (*(result.end() - 1) == '1' || *(result.end() - 1) == '.')
                 break;
             result.erase(result.end() - 1);
         }
-
         uint32_t ex_offset{1U << (exponent_size - 1U)};
-        result += "b+";
-        result += std::to_string(exponent - ex_offset);
-        return result;
+        ex_offset >= 0 ? result += "b+" : result += "b-";
+        return result + std::to_string(exponent - ex_offset);
     }
 
-    //bool        addOne(); // if possible add 1
-
+    bool addOne() // if possible add 1
+    {
+        if (isInfinity() || isNaN())
+            return false;
+        if ((significand & 1UL) == 0)
+        {
+            significand |= 1UL;
+            return true;
+        }
+        uint64_t x{significand + 1};
+        if (x >= (1UL << significand_size))
+            return false;
+        significand = x;
+        if ((significand & (1UL << significand_size)) != 0)
+        {
+            significand >>= 1UL;
+            ++exponent;
+        }
+        return true;
+    }
     // for testing
     uint64_t    getSignificand()    const { return significand; }
     uint32_t    getExponent()       const { return exponent; }

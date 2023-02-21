@@ -12,6 +12,8 @@ int main()
    // assert(x.isNormal());
    // assert(!x.isSubnormal());
     std::cout << x.to_string() << "\n";
+    assert(x.addOne());
+    std::cout << x.to_string() << "\n";
 }
 
 
