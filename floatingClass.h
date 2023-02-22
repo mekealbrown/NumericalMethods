@@ -62,7 +62,66 @@ public:
 
         significand = (temp & sig_mask);
     };
-    //FP(int s,int e,std::string x);
+    FP(int s,int e,std::string x)
+    {
+        significand_size = s;
+        exponent_size = e;
+        if (x[0] != '+' && x[0] != '-') 
+        {
+            significand = 1; 
+            exponent = (1U << e) - 1U; 
+            return;
+        }
+        sign = (x[0] == '+' ? false : true);
+        x.erase(0, 1);
+        if (x[0] == '0') {significand = exponent = 0; return;}
+        else if (x[0] == 'N') {significand = 1; exponent = (1U << e) - 1U; return;}
+        else if (x[0] == 'I') {significand = 0; exponent = (1U << e) - 1U; return;}
+        else if (x[0] != '1') {significand = 1; exponent = (1U << e) - 1U; return;}
+
+        x.erase(0, 1);
+        if (x[0] != '.') {significand = 1; exponent = (1U << e) - 1U; return;}
+        x.erase(0, 1);
+        std::string temp{};
+        int index{1}, count{0};
+        while (x[0] == '1' || x[0] == '0')
+        {
+            if (x[0] == '0')
+                ++count;
+            else    
+                count = 0;
+            ++index;
+            temp += x[0];
+            x.erase(0, 1);
+        }
+        if (count != 0)
+            x.erase(index, count);
+
+        if (x[0] != 'b') {significand = 1; exponent = (1U << e) - 1U; return;}
+        x.erase(0, 1);
+        if (x[0] != '+' && x[0] != '-') {significand = 1; exponent = (1U << e) - 1U; return;}
+        x.erase(0, 1);
+        if (!std::isdigit(x[0])) {significand = 1; exponent = (1U << e) - 1U; return;}
+        exponent = std::stoi(x);
+        significand =  std::stoi(temp);
+        std::cout << "exponent " << exponent << " significand " << significand << "\n";
+       // std::cout << "significand " << temp << " exponent " << ex << "\n";
+        /*If the first character is not a sign, its an error.
+        Use the first character to set the sign. Remove it.
+        If the string is exactly NAN or INF or 0, its easy.
+        If the first character is not 1, its an error.
+        Set D to the first character. Remove it.
+        If the first character is not a period, its an error. Remove it.
+        Remove and append any 0 and 1 digits to D.
+        Delete any trailing 0s in D.
+        If the next character is not b, its an error. Remove it.
+        If the next character is not a sign, its an error.
+        If any remaining character is not a digit, its an error.
+        Use stoi() to compute the exponent (E).
+        If D and E cannot be safely stored given the variable size of this instance, its "infinite".
+        Set the significand and exponent using D (without the hidden bit) and E.
+        */
+    }
 
     bool isNaN()       {return exponent >= (1U << exponent_size) - 1UL && significand != 0UL;}
     bool isZero()      {return exponent == 0U && significand == 0U;}
@@ -92,7 +151,7 @@ public:
                 break;
             result.erase(result.end() - 1);
         }
-        uint32_t ex_offset{1U << (exponent_size - 1U)};
+        int ex_offset{1 << (exponent_size - 1)};
         ex_offset >= 0 ? result += "b+" : result += "b-";
         return result + std::to_string(exponent - ex_offset);
     }
@@ -101,20 +160,12 @@ public:
     {
         if (isInfinity() || isNaN())
             return false;
-        if ((significand & 1UL) == 0)
-        {
-            significand |= 1UL;
-            return true;
-        }
-        uint64_t x{significand + 1};
-        if (x >= (1UL << significand_size))
+        uint64_t sig_max{1UL << significand_size};
+        if ((significand + 2UL) >= sig_max)  //gotta actually add one now somehow
             return false;
-        significand = x;
-        if ((significand & (1UL << significand_size)) != 0)
-        {
-            significand >>= 1UL;
-            ++exponent;
-        }
+        //maybe make copy of significand, shift it til its where it would normally be
+        //add 1, then shift back?
+        
         return true;
     }
     // for testing
