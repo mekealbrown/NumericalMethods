@@ -15,13 +15,15 @@ public:
         significand_size = s;
         exponent_size = e;
         significand = 1UL;
-        //exponent = 0;
         exponent = (1U << e) - 1U; 
         sign = false;
-        //exponent -= 1UL;
     };                
 
-    //Ill test (52, 11, 4) first
+    FP (const FP &other)
+    {
+        this->exponent = exponent;
+    }
+
     FP(int s,int e,int x)
     {
         if (x == 0)
@@ -40,11 +42,7 @@ public:
         //set exponent
         uint64_t temp{static_cast<uint32_t>(x)};
         uint32_t ex_mask{(1U << e) - 1U};
-        while (temp > 1U)
-        {
-            temp >>= 1U;
-            ++exponent;
-        }
+        while (temp > 1U){ temp >>= 1U; ++exponent;}
         if (exponent >= ex_mask) //set INF 
         {
             exponent = ex_mask;
@@ -86,10 +84,7 @@ public:
         int count{0};
         while (x[0] == '1' || x[0] == '0')
         {
-            if (x[0] == '0')
-                ++count;
-            else    
-                count = 0;
+            x[0] == '0' ? ++count : count = 0;
             temp += x[0];
             x.erase(0, 1);
         }
@@ -108,7 +103,7 @@ public:
         ex_sign ? exponent = ex_offset - exponent : exponent = ex_offset + exponent;
         if (temp.length() >= 1) 
         {
-            significand =  std::stoi(temp, 0, 2); 
+            significand =  std::stoi(temp, 0, 2); //denotes conversion of a binary num
             significand <<= (significand_size - temp.length());
         }
         else
@@ -119,7 +114,7 @@ public:
     bool isZero()      {return exponent == 0U && significand == 0U;}
     bool isInfinity()  {return exponent >= ((1U << exponent_size) - 1U) && significand == 0U && !isZero();}
     bool isPositive()  {return !sign;}
-    bool isNormal()    {return exponent != 0 && exponent != (exponent | (exponent_size + 1UL)) - 1UL && !isNaN();} 
+    bool isNormal()    {return exponent != 0 && !isNaN();} 
     bool isSubnormal() {return exponent == 0 && significand > 0 && !isNaN();}
 
     std::string to_string()
@@ -154,15 +149,13 @@ public:
         if (isInfinity() || isNaN())
             return false;
         uint64_t sig_max{1UL << significand_size};
-        if ((significand + 2UL) >= sig_max)  //gotta actually add one now somehow
+        if ((significand + 2UL) >= sig_max) 
             return false;
 
         int ex_offset{1 << (exponent_size - 1)};
-        // uint64_t x{significand | (1UL << significand_size)};
         uint64_t one{1UL << (significand_size - (exponent - ex_offset))};
         significand += one;
-        std::string binary = std::bitset<64>(significand).to_string();
-        if (((int)log2(significand) + 1) > significand_size) {significand = 0; ++exponent;}
+        if (((int)log2(significand) + 1) > significand_size) {significand = 0; ++exponent;} //if num of bits is larger than sig size
         return true;
     }
     // for testing
