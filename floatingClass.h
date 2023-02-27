@@ -2,6 +2,7 @@
 #include <cmath>
 #include <bitset>
 #include <string>
+#include <iostream>
 
 class FP {
     uint64_t    significand;        // trailing
@@ -19,9 +20,13 @@ public:
         sign = false;
     };                
 
-    FP (const FP &other)
+    FP(const FP &other)
     {
-        this->exponent = exponent;
+        significand_size = other.significand_size;
+        exponent_size = other.exponent_size;
+        significand = other.significand;
+        exponent = other.exponent;
+        sign = other.sign;
     }
 
     FP(int s,int e,int x)
@@ -110,12 +115,12 @@ public:
             significand = 0;
     }
 
-    bool isNaN()       {return exponent >= (1U << exponent_size) - 1UL && significand != 0UL;}
-    bool isZero()      {return exponent == 0U && significand == 0U;}
-    bool isInfinity()  {return exponent >= ((1U << exponent_size) - 1U) && significand == 0U && !isZero();}
-    bool isPositive()  {return !sign;}
-    bool isNormal()    {return exponent != 0 && !isNaN();} 
-    bool isSubnormal() {return exponent == 0 && significand > 0 && !isNaN();}
+    bool isNaN()       const {return exponent >= (1U << exponent_size) - 1UL && significand != 0UL;}
+    bool isZero()      const {return exponent == 0U && significand == 0U;}
+    bool isInfinity()  const {return exponent >= ((1U << exponent_size) - 1U) && significand == 0U && !isZero();}
+    bool isPositive()  const {return !sign;}
+    bool isNormal()    const {return exponent != 0 && !isNaN();} 
+    bool isSubnormal() const {return exponent == 0 && significand > 0 && !isNaN();}
 
     std::string to_string()
     {
@@ -144,20 +149,59 @@ public:
         return result + std::to_string(exponent - ex_offset);
     }
 
-    bool addOne() // if possible add 1
+    void add(const FP &other) // this might be easy if I follow this current structure
     {
         if (isInfinity() || isNaN())
-            return false;
+            return;
         uint64_t sig_max{1UL << significand_size};
         if ((significand + 2UL) >= sig_max) 
-            return false;
+            return;
 
         int ex_offset{1 << (exponent_size - 1)};
         uint64_t one{1UL << (significand_size - (exponent - ex_offset))};
         significand += one;
         if (((int)log2(significand) + 1) > significand_size) {significand = 0; ++exponent;} //if num of bits is larger than sig size
-        return true;
     }
+
+    void negate()
+    {
+        if (sign)
+            sign = false;
+        else  
+            sign = true;
+    }
+
+    enum Order{BEFORE, EQUAL, AFTER, UNORDERED};
+
+    Order compare(const FP &other)
+    {
+        if (isZero())
+        {
+            if (other.isZero())
+                return Order::EQUAL;
+            return other.sign == false ? Order::BEFORE : Order::AFTER;
+        }
+        if (isNaN() || other.isNaN())
+            return (isNaN() && other.isNaN()) ? Order::EQUAL : Order::UNORDERED;
+        
+        if (isInfinity() || other.isInfinity())
+        {
+            if (isInfinity() && other.isInfinity())
+                return Order::EQUAL;
+            else if (isInfinity())
+                return !sign ? Order::AFTER : Order::BEFORE;
+            else
+                return !other.sign ? Order::BEFORE : Order::AFTER;
+        }
+        //test "normal" nums
+        if (exponent == other.exponent && significand == other.significand)
+            return Order::EQUAL;
+        else if (exponent == other.exponent)
+            return significand > other.significand ? Order::AFTER : Order::BEFORE;
+        else  
+            return exponent > other.exponent ? Order::AFTER : Order::BEFORE;
+    }
+
     // for testing
     uint64_t    getSignificand()    const { return significand; }
     uint32_t    getExponent()       const { return exponent; }
