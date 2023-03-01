@@ -2,6 +2,7 @@
 #include <cmath>
 #include <bitset>
 #include <string>
+#include <cstdlib>
 #include <iostream>
 
 class FP {
@@ -157,19 +158,47 @@ public:
         if ((significand + 2UL) >= sig_max) 
             return;
 
-        int ex_offset{1 << (exponent_size - 1)};
-        uint64_t one{1UL << (significand_size - (exponent - ex_offset))};
-        significand += one;
-        if (((int)log2(significand) + 1) > significand_size) {significand = 0; ++exponent;} //if num of bits is larger than sig size
+        bool F{sign};
+        uint32_t oth_exp{other.exponent};
+        uint64_t oth_sig{other.significand}; 
+        if ((significand == oth_sig) && (exponent == oth_exp))
+            if (sign != other.sign) {exponent = significand = 0; return;}
+        if (significand < oth_sig)
+            if (exponent <= oth_exp)
+            {
+                uint64_t temp1, temp2;
+                F = other.sign;
+                temp1 = exponent; temp2 = significand;
+                exponent = oth_exp; significand = oth_sig;
+                oth_exp = temp1; oth_sig = temp2;
+            }
+        std::cout << "here\n";
+        for (int i{0}; i < exponent - oth_exp; ++i)
+            oth_sig >>= 1UL;
+        uint32_t E{exponent};
+        uint64_t S{F == other.sign ? significand + oth_sig : significand - oth_sig};
+        std::cout << "Sig " << significand << "\n";
+        if (S == 0UL) {exponent = significand = 0; std::cout << "its zero for some reason\n"; return;}
+        
+        while (true)
+        {
+            std::cout << "here\n";
+            if (((int)log2(S) + 1) > significand_size) {S >>= 1UL; ++E;} //if num of bits is larger than sig size
+            else 
+                break;
+        }
+        uint64_t sig_mask{1UL << significand_size};
+        while ((S & sig_mask) == 0)
+        {
+            std::cout << "here\n";
+            S <<= 1UL; --E;
+        }
+        sig_mask >>= 1UL;
+        uint32_t ex_offset{(1U << (exponent_size - 1U))};
+        sign = F; exponent = E + ex_offset; significand = S & sig_mask;
     }
 
-    void negate()
-    {
-        if (sign)
-            sign = false;
-        else  
-            sign = true;
-    }
+    void negate() {sign ? sign = false : sign = true;}
 
     enum Order{BEFORE, EQUAL, AFTER, UNORDERED};
 

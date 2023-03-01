@@ -13,11 +13,11 @@ int main()
 
     FP x(two);
     x.add(one);         // x = 3
-    cout << x.to_string();          // should print +1.1b+1
+    cout << x.to_string() << "\n";          // should print +1.1b+1
 
     FP y(two);
     y.negate();         // y = -2
-    cout << y.to_string();          // should print -1.b+1
+    cout << y.to_string() << "\n";          // should print -1.b+1
 
     FP z(x);
     z.add(y);           // z = 3-2 = -1
