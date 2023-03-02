@@ -161,6 +161,7 @@ public:
         bool F{sign};
         uint32_t oth_exp{other.exponent};
         uint64_t oth_sig{other.significand}; 
+        std::cout << "other sig " << oth_sig << " ori sig " << significand << "\n";
         if ((significand == oth_sig) && (exponent == oth_exp))
             if (sign != other.sign) {exponent = significand = 0; return;}
         if (significand < oth_sig)
@@ -172,17 +173,14 @@ public:
                 exponent = oth_exp; significand = oth_sig;
                 oth_exp = temp1; oth_sig = temp2;
             }
-        std::cout << "here\n";
-        for (int i{0}; i < exponent - oth_exp; ++i)
+        for (uint32_t i{0}; i < exponent - oth_exp; ++i)
             oth_sig >>= 1UL;
         uint32_t E{exponent};
         uint64_t S{F == other.sign ? significand + oth_sig : significand - oth_sig};
-        std::cout << "Sig " << significand << "\n";
         if (S == 0UL) {exponent = significand = 0; std::cout << "its zero for some reason\n"; return;}
         
         while (true)
         {
-            std::cout << "here\n";
             if (((int)log2(S) + 1) > significand_size) {S >>= 1UL; ++E;} //if num of bits is larger than sig size
             else 
                 break;
@@ -190,7 +188,6 @@ public:
         uint64_t sig_mask{1UL << significand_size};
         while ((S & sig_mask) == 0)
         {
-            std::cout << "here\n";
             S <<= 1UL; --E;
         }
         sig_mask >>= 1UL;
@@ -211,12 +208,15 @@ public:
             return other.sign == false ? Order::BEFORE : Order::AFTER;
         }
         if (isNaN() || other.isNaN())
-            return (isNaN() && other.isNaN()) ? Order::EQUAL : Order::UNORDERED;
+            return Order::UNORDERED;
         
         if (isInfinity() || other.isInfinity())
         {
             if (isInfinity() && other.isInfinity())
-                return Order::EQUAL;
+                if (sign == other.sign)
+                    return Order::EQUAL;
+                else
+                    return !sign ? Order::AFTER : Order::BEFORE;
             else if (isInfinity())
                 return !sign ? Order::AFTER : Order::BEFORE;
             else
@@ -224,11 +224,17 @@ public:
         }
         //test "normal" nums
         if (exponent == other.exponent && significand == other.significand)
-            return Order::EQUAL;
+            if (sign == other.sign)
+                return Order::EQUAL;
+            else
+                return sign ? Order::AFTER : Order::BEFORE;
+        //gotta check signs here
         else if (exponent == other.exponent)
             return significand > other.significand ? Order::AFTER : Order::BEFORE;
         else  
             return exponent > other.exponent ? Order::AFTER : Order::BEFORE;
+        else
+            return !sign ? Order::AFTER : Order::BEFORE;
     }
 
     // for testing
