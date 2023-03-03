@@ -150,7 +150,7 @@ public:
         return result + std::to_string(exponent - ex_offset);
     }
 
-    void add(const FP &other) // this might be easy if I follow this current structure
+    void add(const FP &other) // this is some bullshit
     {
         if (isInfinity() || isNaN())
             return;
@@ -199,43 +199,45 @@ public:
 
     enum Order{BEFORE, EQUAL, AFTER, UNORDERED};
 
-    Order compare(const FP &other)
-    {
-        if (isZero())
+    Order  compare(const FP &other) 
+    { 
+        if (isNaN() || other.isNaN()) return UNORDERED;
+        if (isInfinity() && other.isInfinity()) 
         {
-            if (other.isZero())
-                return Order::EQUAL;
-            return other.sign == false ? Order::BEFORE : Order::AFTER;
+            if (sign == other.sign) return EQUAL;
+            else if (sign) return BEFORE;
+            else return AFTER;
         }
-        if (isNaN() || other.isNaN())
-            return Order::UNORDERED;
-        
-        if (isInfinity() || other.isInfinity())
+        if (isZero() && other.isZero()) return EQUAL;
+
+        if (sign != other.sign) 
         {
-            if (isInfinity() && other.isInfinity())
-                if (sign == other.sign)
-                    return Order::EQUAL;
-                else
-                    return !sign ? Order::AFTER : Order::BEFORE;
-            else if (isInfinity())
-                return !sign ? Order::AFTER : Order::BEFORE;
-            else
-                return !other.sign ? Order::BEFORE : Order::AFTER;
+            if (sign) return BEFORE; 
+            else return AFTER;   
         }
-        //test "normal" nums
-        if (exponent == other.exponent && significand == other.significand)
-            if (sign == other.sign)
-                return Order::EQUAL;
-            else
-                return sign ? Order::AFTER : Order::BEFORE;
-        //gotta check signs here
-        else if (exponent == other.exponent)
-            return significand > other.significand ? Order::AFTER : Order::BEFORE;
-        else  
-            return exponent > other.exponent ? Order::AFTER : Order::BEFORE;
-        else
-            return !sign ? Order::AFTER : Order::BEFORE;
+        if (exponent < other.exponent) 
+        {
+            if (sign) return AFTER; 
+            else return BEFORE;         
+        } 
+        else if (exponent > other.exponent) 
+        {
+            if (sign) return BEFORE;    
+            else return AFTER;     
+        }
+        if (significand < other.significand) 
+        {
+            if (sign) return AFTER; 
+            else return BEFORE;         
+        } 
+        else if (significand > other.significand) 
+        {
+            if (sign) return BEFORE;    
+            else return AFTER;      
+        }
+        return EQUAL;
     }
+    
 
     // for testing
     uint64_t    getSignificand()    const { return significand; }

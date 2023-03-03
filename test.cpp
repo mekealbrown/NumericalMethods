@@ -5,24 +5,38 @@ using namespace std;
 
 int main()
 {
-    FP nn(16,8,"+NAN");
-    FP ni(16,8,"-INF");
-    FP ny(16,8,-1032);
-    FP nx(16,8,-363);
+    FP ny(16,8,-1516);
+    FP nx(16,8,-892);
     FP nz(16,8,"-0");
     FP pz(16,8,"+0");
-    FP px(16,8,363);
-    FP py(16,8,1032);
-    FP pi(16,8,"+INF");
-        assert(ny.compare(nn) == FP::Order::UNORDERED);
-        assert(ny.compare(ni) == FP::Order::AFTER);
-        assert(ny.compare(ny) == FP::Order::EQUAL);
-        assert(ny.compare(nx) == FP::Order::BEFORE);
-        assert(ny.compare(nz) == FP::Order::BEFORE);
-        assert(ny.compare(pz) == FP::Order::BEFORE);
-        assert(ny.compare(px) == FP::Order::BEFORE);
-        assert(ny.compare(py) == FP::Order::BEFORE);
-        assert(ny.compare(pi) == FP::Order::BEFORE);
+    FP px(16,8,892);
+    FP py(16,8,1516);
+    FP pd(16,8,624);
+    FP t(px);           // +x
+    t.add(nz);          // +x
+    assert_equal(t.compare(px), FP::Order::EQUAL);
+    t.add(pz);          // +x
+    assert_equal(t.compare(px), FP::Order::EQUAL);
+    t.add(nx);          // 0
+    assert_var(t.isZero(),t.to_string());
+    t.add(px);          // +x
+    assert_equal(t.compare(px), FP::Order::EQUAL);
+    t.add(py);          // x+y
+    assert_equal(t.compare(py),FP::Order::AFTER);
+    assert_equal(t.compare(px),FP::Order::AFTER);
+    t.add(nx);          // +y
+    assert_equal(t.compare(py),FP::Order::EQUAL);
+    t.add(nx);          // +y-x
+    assert_equal(t.compare(pd),FP::Order::EQUAL);
+    t.add(ny);          // RZ(RZ(y-x)-y)
+    //assert_equal(t.compare(nx),FP::Order::EQUAL);
+    t.add(ny);          // -y-x
+    t.add(px);          // -y
+    assert_equal(t.compare(ny), FP::Order::EQUAL);
+    assert_equal(t.compare(nz), FP::Order::BEFORE);
+    t.add(px);          // -y+x
+    t.add(py);          // +x
+    assert_equal(t.compare(px), FP::Order::EQUAL);
 }
 
 
