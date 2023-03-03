@@ -5,6 +5,9 @@
 #include <cstdlib>
 #include <iostream>
 
+#define DEBUG(a,b) std::cout << "exponent " << a << " significand " << b << "\n";
+
+
 class FP {
     uint64_t    significand;        // trailing
     uint32_t    exponent;
@@ -150,49 +153,25 @@ public:
         return result + std::to_string(exponent - ex_offset);
     }
 
-    void add(const FP &other) // this is some bullshit
+    void add(const FP &other) 
     {
         if (isInfinity() || isNaN())
             return;
-        uint64_t sig_max{1UL << significand_size};
-        if ((significand + 2UL) >= sig_max) 
+        if (other.isZero())
             return;
+        //uint64_t sig_max{1UL << significand_size};
+        //if ((significand + 2UL) >= sig_max) 
+        //    return;
 
         bool F{sign};
         uint32_t oth_exp{other.exponent};
         uint64_t oth_sig{other.significand}; 
-        std::cout << "other sig " << oth_sig << " ori sig " << significand << "\n";
+        //std::cout << "exponent " << exponent << " significand " << significand << "\n";
+        //std::cout << "other exponent " << oth_exp << " other significand " << oth_sig << "\n";
         if ((significand == oth_sig) && (exponent == oth_exp))
             if (sign != other.sign) {exponent = significand = 0; return;}
-        if (significand < oth_sig)
-            if (exponent <= oth_exp)
-            {
-                uint64_t temp1, temp2;
-                F = other.sign;
-                temp1 = exponent; temp2 = significand;
-                exponent = oth_exp; significand = oth_sig;
-                oth_exp = temp1; oth_sig = temp2;
-            }
-        for (uint32_t i{0}; i < exponent - oth_exp; ++i)
-            oth_sig >>= 1UL;
-        uint32_t E{exponent};
-        uint64_t S{F == other.sign ? significand + oth_sig : significand - oth_sig};
-        if (S == 0UL) {exponent = significand = 0; std::cout << "its zero for some reason\n"; return;}
         
-        while (true)
-        {
-            if (((int)log2(S) + 1) > significand_size) {S >>= 1UL; ++E;} //if num of bits is larger than sig size
-            else 
-                break;
-        }
-        uint64_t sig_mask{1UL << significand_size};
-        while ((S & sig_mask) == 0)
-        {
-            S <<= 1UL; --E;
-        }
-        sig_mask >>= 1UL;
-        uint32_t ex_offset{(1U << (exponent_size - 1U))};
-        sign = F; exponent = E + ex_offset; significand = S & sig_mask;
+        
     }
 
     void negate() {sign ? sign = false : sign = true;}
