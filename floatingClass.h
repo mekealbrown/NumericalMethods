@@ -164,39 +164,60 @@ public:
         bool F{sign};
         uint32_t oth_exp{other.exponent};
         uint64_t oth_sig{other.significand}; 
-        DEBUG(significand, oth_sig);
+       // DEBUG(significand, oth_sig);
         if (isInfinity() || isNaN())
             return;
-        if (other.isZero())
-            return;
-        //std::cout << "exponent " << exponent << " significand " << significand << "\n";
-        //std::cout << "other exponent " << oth_exp << " other significand " << oth_sig << "\n";
-        if ((significand == oth_sig) && (exponent == oth_exp))
-            if (sign != other.sign) {exponent = significand = 0; return;}
-        
-        if (other.sign)
+        else if (isZero())
         {
-            //DEBUG(significand, oth_sig);
-            if (significand >= oth_sig)
-                significand -= oth_sig;
-            else 
-            {
-                //DEBUG(significand, oth_sig); 
-                significand -= (oth_sig - significand); //sign = true;
-            }
+            exponent = oth_exp;
+            significand = oth_sig;
+            sign = other.sign;
+            return;
+        }
+        else if (other.isZero()) {return;}
+        else if ((significand == oth_sig) && (exponent == oth_exp))
+        {
+            if (sign != other.sign) {exponent = significand = 0; return;}
         }
         else
-            significand += oth_sig;
+        {
+            int msb_pos{(int)(log2(significand)) + 1}; //most significant bit position
+            int msb_pos_oth{(int)(log2(oth_sig)) + 1};
+            significand |= (1UL << msb_pos);  //concatenate hidden bit 
+            oth_sig |= (1UL << msb_pos_oth);
+            
+        }
 
-        //gotta figure out how to change the exponent up or down
-//        std::cout << "sig " << significand << "\n";
-        uint64_t min_sig{1UL << (significand_size - 2)};
-        min_sig += 1UL;
-        if (exponent < oth_exp)
-            exponent = oth_exp;
-        else if (min_sig > significand)
-            --exponent;
-        
+
+
+
+
+
+
+       // 
+       // if (other.sign)
+       // {
+       //     //DEBUG(significand, oth_sig);
+       //     if (significand >= oth_sig)
+       //         significand -= oth_sig;
+       //     else 
+       //     {
+       //         //DEBUG(significand, oth_sig); 
+       //         significand -= (oth_sig - significand); //sign = true;
+       //     }
+       // }
+       // else
+       //     significand += oth_sig;
+//
+       // //gotta figure out how to change the exponent up or down
+//     //   std::cout << "sig " << significand << "\n";
+       // uint64_t min_sig{1UL << (significand_size - 2)};
+       // min_sig += 1UL;
+       // if (exponent < oth_exp)
+       //     exponent = oth_exp;
+       // else if (min_sig > significand)
+       //     --exponent;
+       // 
     }
 
     void negate() {sign ? sign = false : sign = true;}
