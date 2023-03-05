@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#define DEBUG(a,b) std::cout << "exponent " << a << " significand " << b << "\n";
+#define DEBUG(a,b) std::cout << "sig " << a << " other sig " << b << "\n";
 
 
 class FP {
@@ -155,10 +155,8 @@ public:
 
     void add(const FP &other) 
     {
-        if (isInfinity() || isNaN())
-            return;
-        if (other.isZero())
-            return;
+        
+        
         //uint64_t sig_max{1UL << significand_size};
         //if ((significand + 2UL) >= sig_max) 
         //    return;
@@ -166,11 +164,38 @@ public:
         bool F{sign};
         uint32_t oth_exp{other.exponent};
         uint64_t oth_sig{other.significand}; 
+        DEBUG(significand, oth_sig);
+        if (isInfinity() || isNaN())
+            return;
+        if (other.isZero())
+            return;
         //std::cout << "exponent " << exponent << " significand " << significand << "\n";
         //std::cout << "other exponent " << oth_exp << " other significand " << oth_sig << "\n";
         if ((significand == oth_sig) && (exponent == oth_exp))
             if (sign != other.sign) {exponent = significand = 0; return;}
         
+        if (other.sign)
+        {
+            //DEBUG(significand, oth_sig);
+            if (significand >= oth_sig)
+                significand -= oth_sig;
+            else 
+            {
+                //DEBUG(significand, oth_sig); 
+                significand -= (oth_sig - significand); //sign = true;
+            }
+        }
+        else
+            significand += oth_sig;
+
+        //gotta figure out how to change the exponent up or down
+//        std::cout << "sig " << significand << "\n";
+        uint64_t min_sig{1UL << (significand_size - 2)};
+        min_sig += 1UL;
+        if (exponent < oth_exp)
+            exponent = oth_exp;
+        else if (min_sig > significand)
+            --exponent;
         
     }
 
