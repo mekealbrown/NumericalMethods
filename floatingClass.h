@@ -153,7 +153,7 @@ public:
         return result + std::to_string(exponent - ex_offset);
     }
 
-    void add(const FP &other) 
+    void add( FP &other) //change back to const ....
     {
         
         
@@ -181,12 +181,42 @@ public:
         }
         else
         {
-            int msb_pos{(int)(log2(significand)) + 1}; //most significant bit position
-            int msb_pos_oth{(int)(log2(oth_sig)) + 1};
-            significand |= (1UL << msb_pos);  //concatenate hidden bit 
-            oth_sig |= (1UL << msb_pos_oth);
-            
+            DEBUG(significand, oth_sig);
+            significand |= (1UL << (significand_size + 1));  //concatenate hidden bit 
+            oth_sig |= (1UL << (other.significand_size + 1)); 
+            std::cout << to_string() << " " << other.to_string() << "\n";
+            std::cout << "\n";
+            uint32_t ex_diff;
+            ex_diff = (exponent >= oth_exp ? exponent - oth_exp : oth_exp - exponent);
+            while (--ex_diff)
+            {
+                if (exponent < oth_exp) {exponent <<= 1U; significand <<= 1UL;}
+                else {oth_exp <<= 1U; oth_sig <<= 1UL;}
+            }
+
+            if (sign == other.sign)
+                significand += oth_sig;
+            else if (!sign && significand > oth_sig)
+                significand -= oth_sig;
+            else if (!sign && significand < oth_sig)
+                significand -= (oth_sig - significand);
+            else if (!other.sign && significand > oth_sig)
+                significand -= oth_sig;
+            else if (!other.sign && significand < oth_sig)
+                significand -= (oth_sig - significand);
+            //check msb position, if greater than sig size, shift right and increase exp
+            int msb_pos{(int)(log2(significand))};
+            while (true)
+            {
+                if (msb_pos > significand_size) {significand >>= 1UL; ++exponent;}
+                else
+                    break;
+                --msb_pos;
+            }
+            significand >>= 1UL;
+            //remove hidden bit, shift right and decrease exp??
         }
+
 
 
 
