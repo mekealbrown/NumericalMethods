@@ -181,11 +181,8 @@ public:
         }
         else
         {
-            DEBUG(significand, oth_sig);
             significand |= (1UL << (significand_size + 1));  //concatenate hidden bit 
             oth_sig |= (1UL << (other.significand_size + 1)); 
-            std::cout << to_string() << " " << other.to_string() << "\n";
-            std::cout << "\n";
             uint32_t ex_diff;
             ex_diff = (exponent >= oth_exp ? exponent - oth_exp : oth_exp - exponent);
             while (--ex_diff)
@@ -199,22 +196,28 @@ public:
             else if (!sign && significand > oth_sig)
                 significand -= oth_sig;
             else if (!sign && significand < oth_sig)
+            {
                 significand -= (oth_sig - significand);
+                sign = false;
+            }
             else if (!other.sign && significand > oth_sig)
                 significand -= oth_sig;
             else if (!other.sign && significand < oth_sig)
-                significand -= (oth_sig - significand);
-            //check msb position, if greater than sig size, shift right and increase exp
-            int msb_pos{(int)(log2(significand))};
-            while (true)
             {
-                if (msb_pos > significand_size) {significand >>= 1UL; ++exponent;}
-                else
-                    break;
-                --msb_pos;
+                significand -= (oth_sig - significand);
+                sign = true;
             }
-            significand >>= 1UL;
-            //remove hidden bit, shift right and decrease exp??
+            while (significand > (1 << (significand_size + 1)) - 1)
+            {
+                significand >>= 1UL;
+                ++exponent; 
+            }
+            while (((1 << significand_size) & significand) == 0)
+            {
+                significand <<= 1UL;
+                --exponent;
+            }
+            significand = ~(1UL << significand_size) & significand;
         }
 
 
